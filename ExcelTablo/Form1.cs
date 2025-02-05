@@ -13,6 +13,7 @@ namespace WinFormsExcelApp
         private string excelFilePath = @"C:\Users\egitim2\Desktop\makine ilerleme.xlsx";
         private DataTable dataTable = new DataTable();
         private DataGridView dataGridView1;
+        private Button saveButton;
 
         public MainForm()
         {
@@ -31,8 +32,18 @@ namespace WinFormsExcelApp
                 };
 
                 dataGridView1.CellClick += DataGridView1_CellClick;
+                dataGridView1.CellValueChanged += DataGridView1_CellValueChanged; 
                 this.Controls.Add(dataGridView1);
             }
+
+            saveButton = new Button
+            {
+                Text = "Verileri Kaydet",
+                Dock = DockStyle.Bottom,
+                Height = 40
+            };
+            saveButton.Click += SaveButton_Click;
+            this.Controls.Add(saveButton);
 
             LoadExcelData();
         }
@@ -93,7 +104,7 @@ namespace WinFormsExcelApp
             var comboBox = new ComboBox
             {
                 DropDownStyle = ComboBoxStyle.DropDownList,
-                Items = { "e", "q", "y", "Yeni Değer" }, 
+                Items = {"", "e", "q", "y", "Yeni Değer" }, 
                 Text = cell.Value?.ToString() ?? string.Empty, 
                 Size = new Size(cellRect.Width, 20), 
                 Location = new Point(cellRect.Left, cellRect.Top)
@@ -107,6 +118,15 @@ namespace WinFormsExcelApp
 
             dataGridView1.Controls.Add(comboBox);
             comboBox.BringToFront();
+        }
+
+        private void DataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+            {
+                var changedCell = dataGridView1[e.ColumnIndex, e.RowIndex];
+                dataTable.Rows[e.RowIndex][e.ColumnIndex] = changedCell.Value.ToString();
+            }
         }
 
         private void SaveToExcel()
@@ -130,6 +150,12 @@ namespace WinFormsExcelApp
 
                 workbook.SaveAs(excelFilePath);
             }
+        }
+
+        private void SaveButton_Click(object sender, EventArgs e)
+        {
+            SaveToExcel();
+            MessageBox.Show("Veriler başarıyla kaydedildi.");
         }
     }
 }
