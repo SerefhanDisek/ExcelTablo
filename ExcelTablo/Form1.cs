@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -21,14 +22,15 @@ namespace WinFormsExcelApp
             {
                 dataGridView1 = new DataGridView
                 {
-                    Dock = DockStyle.Fill, 
+                    Dock = DockStyle.Fill,
                     AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                    AllowUserToAddRows = true, 
-                    AllowUserToDeleteRows = true, 
-                    SelectionMode = DataGridViewSelectionMode.FullRowSelect 
+                    AllowUserToAddRows = true,
+                    AllowUserToDeleteRows = true,
+                    SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                    EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2 
                 };
 
-                dataGridView1.CellDoubleClick += DataGridView1_CellDoubleClick; // Çift tıklanınca seçim penceresi açılacak
+                dataGridView1.CellClick += DataGridView1_CellClick;
                 this.Controls.Add(dataGridView1);
             }
 
@@ -72,54 +74,39 @@ namespace WinFormsExcelApp
             dataGridView1.DataSource = dataTable;
         }
 
-        private void DataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        private void DataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
-                string selectedValue = ShowSelectionDialog();
-
-                if (!string.IsNullOrEmpty(selectedValue))
-                {
-                    dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value = selectedValue;
-                }
+                var cell = dataGridView1[e.ColumnIndex, e.RowIndex];
+                ShowComboBoxInCell(e.RowIndex, e.ColumnIndex, cell);
             }
         }
 
-        private string ShowSelectionDialog()
+        private void ShowComboBoxInCell(int rowIndex, int columnIndex, DataGridViewCell cell)
         {
-            Form selectionForm = new Form
-            {
-                Width = 300,
-                Height = 200,
-                Text = "Seçim Yap",
-                StartPosition = FormStartPosition.CenterParent
-            };
+            var cellRect = dataGridView1.GetCellDisplayRectangle(columnIndex, rowIndex, true);
 
-            ComboBox comboBox = new ComboBox
+            if (dataGridView1.Controls.OfType<ComboBox>().Any(c => c.Parent == dataGridView1 && c.Bounds.IntersectsWith(cellRect)))
+                return;
+
+            var comboBox = new ComboBox
             {
-                Dock = DockStyle.Top,
                 DropDownStyle = ComboBoxStyle.DropDownList,
-                Items = { "e", "q", "y", "Yeni Değer" } 
+                Items = { "e", "q", "y", "Yeni Değer" }, 
+                Text = cell.Value?.ToString() ?? string.Empty, 
+                Size = new Size(cellRect.Width, 20), 
+                Location = new Point(cellRect.Left, cellRect.Top)
             };
 
-            Button okButton = new Button
+            comboBox.SelectedIndexChanged += (sender, args) =>
             {
-                Text = "Seç",
-                Dock = DockStyle.Bottom
+                cell.Value = comboBox.SelectedItem?.ToString();
+                dataGridView1.Controls.Remove(comboBox); 
             };
 
-            selectionForm.Controls.Add(comboBox);
-            selectionForm.Controls.Add(okButton);
-
-            string selectedValue = null;
-            okButton.Click += (s, e) =>
-            {
-                selectedValue = comboBox.SelectedItem?.ToString();
-                selectionForm.Close();
-            };
-
-            selectionForm.ShowDialog();
-            return selectedValue;
+            dataGridView1.Controls.Add(comboBox);
+            comboBox.BringToFront();
         }
 
         private void SaveToExcel()
