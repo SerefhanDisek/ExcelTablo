@@ -14,6 +14,7 @@ namespace WinFormsExcelApp
         private DataTable dataTable = new DataTable();
         private DataGridView dataGridView1;
         private Button saveButton;
+        private Button exportButton;  
 
         public MainForm()
         {
@@ -44,6 +45,15 @@ namespace WinFormsExcelApp
             };
             saveButton.Click += SaveButton_Click;
             this.Controls.Add(saveButton);
+
+            exportButton = new Button
+            {
+                Text = "Excel Çıktısı Al",
+                Dock = DockStyle.Bottom,
+                Height = 40
+            };
+            exportButton.Click += ExportButton_Click;
+            this.Controls.Add(exportButton);
 
             LoadExcelData();
         }
@@ -104,7 +114,7 @@ namespace WinFormsExcelApp
             var comboBox = new ComboBox
             {
                 DropDownStyle = ComboBoxStyle.DropDownList,
-                Items = {"", "e", "q", "y", "Yeni Değer" }, 
+                Items = { "e", "q", "y", "Yeni Değer" }, 
                 Text = cell.Value?.ToString() ?? string.Empty, 
                 Size = new Size(cellRect.Width, 20), 
                 Location = new Point(cellRect.Left, cellRect.Top)
@@ -156,6 +166,42 @@ namespace WinFormsExcelApp
         {
             SaveToExcel();
             MessageBox.Show("Veriler başarıyla kaydedildi.");
+        }
+
+        private void ExportButton_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "Excel Dosyası|*.xlsx",
+                Title = "Excel Dosyasını Kaydet"
+            };
+
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                string exportPath = saveFileDialog.FileName;
+
+                using (var workbook = new XLWorkbook())
+                {
+                    var worksheet = workbook.Worksheets.Add("Sayfa1");
+
+                    for (int i = 0; i < dataTable.Columns.Count; i++)
+                    {
+                        worksheet.Cell(1, i + 1).Value = dataTable.Columns[i].ColumnName;
+                    }
+
+                    for (int i = 0; i < dataTable.Rows.Count; i++)
+                    {
+                        for (int j = 0; j < dataTable.Columns.Count; j++)
+                        {
+                            worksheet.Cell(i + 2, j + 1).Value = dataTable.Rows[i][j].ToString();
+                        }
+                    }
+
+                    workbook.SaveAs(exportPath);
+                }
+
+                MessageBox.Show("Veriler başarıyla dışa aktarıldı.");
+            }
         }
     }
 }
