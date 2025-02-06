@@ -47,6 +47,55 @@ namespace WinFormsExcelApp
             };
             dataGridView1.CellClick += DataGridView1_CellClick;
             this.Controls.Add(dataGridView1);
+
+            AddAddColumnButton();
+
+        }
+
+        private void AddAddColumnButton()
+        {
+            Button addColumnButton = new Button
+            {
+                Text = "Sütun Ekle",
+                Dock = DockStyle.Right,
+                Width = 60,  
+                Height = 10
+            };
+
+            addColumnButton.Click += AddColumnButton_Click;
+            this.Controls.Add(addColumnButton);
+        }
+
+        private void AddColumnButton_Click(object sender, EventArgs e)
+        {
+            string newColumnName = PromptForNewColumnName();
+            if (!string.IsNullOrEmpty(newColumnName))
+            {
+                //dataGridView1.Columns.Add(newColumnName, newColumnName);
+                dataTable.Columns.Add(newColumnName, typeof(string));
+            }
+        }
+
+        private string PromptForNewColumnName()
+        {
+            using (Form inputForm = new Form())
+            {
+                inputForm.Width = 300;
+                inputForm.Height = 150;
+                inputForm.Text = "Yeni Sütun Adı";
+
+                Label label = new Label() { Left = 10, Top = 20, Text = "Yeni sütun adını giriniz:" };
+                TextBox textBox = new TextBox() { Left = 10, Top = 50, Width = 260 };
+                Button okButton = new Button() { Text = "Ekle", Left = 180, Width = 80, Top = 80, DialogResult = DialogResult.OK };
+
+                okButton.Click += (sender, e) => { inputForm.Close(); };
+                inputForm.Controls.Add(label);
+                inputForm.Controls.Add(textBox);
+                inputForm.Controls.Add(okButton);
+                inputForm.AcceptButton = okButton;
+
+                return inputForm.ShowDialog() == DialogResult.OK ? textBox.Text.Trim() : null;
+            }
         }
 
         private void InitializeButtons()
