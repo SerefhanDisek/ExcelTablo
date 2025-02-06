@@ -16,43 +16,42 @@ namespace WinFormsExcelApp
         private DataGridView dataGridView1;
         private Button saveButton;
         private Button exportButton;
-
-        private List<string> comboBoxItems = new List<string> { "", "e", "q", "y", "Yeni Değer Ekle..." };
+        private List<string> temporaryComboBoxItems = new List<string> { "", "e", "q", "y", "Yeni Değer Ekle..." };
 
         public MainForm()
         {
             InitializeComponent();
-
-            SelectExcelFile(); // Kullanıcıdan dosya seçmesini iste
+            SelectExcelFile();
 
             if (string.IsNullOrEmpty(excelFilePath))
             {
                 MessageBox.Show("Excel dosyası seçilmedi. Program kapanıyor.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                Environment.Exit(0); // Kullanıcı dosya seçmezse uygulamayı kapat
+                Environment.Exit(0);
             }
 
-            if (dataGridView1 == null)
-            {
-                dataGridView1 = new DataGridView
-                {
-                    Dock = DockStyle.Fill,
-                    AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                    AllowUserToAddRows = true,
-                    AllowUserToDeleteRows = true,
-                    SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                    EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2
-                };
+            InitializeDataGridView();
+            InitializeButtons();
+            LoadExcelData();
+        }
 
-                dataGridView1.CellClick += DataGridView1_CellClick;
-                this.Controls.Add(dataGridView1);
-            }
-
-            saveButton = new Button
+        private void InitializeDataGridView()
+        {
+            dataGridView1 = new DataGridView
             {
-                Text = "Verileri Kaydet",
-                Dock = DockStyle.Bottom,
-                Height = 40
+                Dock = DockStyle.Fill,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+                AllowUserToAddRows = true,
+                AllowUserToDeleteRows = true,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2
             };
+            dataGridView1.CellClick += DataGridView1_CellClick;
+            this.Controls.Add(dataGridView1);
+        }
+
+        private void InitializeButtons()
+        {
+            saveButton = new Button { Text = "Verileri Kaydet", Dock = DockStyle.Bottom, Height = 40 };
             saveButton.Click += SaveButton_Click;
             this.Controls.Add(saveButton);
 
@@ -64,8 +63,6 @@ namespace WinFormsExcelApp
             };
             exportButton.Click += ExportButton_Click;
             this.Controls.Add(exportButton);
-
-            LoadExcelData(); // Seçilen dosyayı yükle
         }
 
         private void SelectExcelFile()
@@ -74,8 +71,6 @@ namespace WinFormsExcelApp
             {
                 openFileDialog.Title = "Bir Excel dosyası seçin";
                 openFileDialog.Filter = "Excel Dosyaları|*.xlsx;*.xls";
-                openFileDialog.Multiselect = false;
-
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     excelFilePath = openFileDialog.FileName;
@@ -106,63 +101,36 @@ namespace WinFormsExcelApp
 
                 foreach (var row in rows.Skip(1))
                 {
-                    var values = row.Cells().Select(c => c.GetValue<string>()).ToArray();
-                    dataTable.Rows.Add(values);
+                    dataTable.Rows.Add(row.Cells().Select(c => c.GetValue<string>()).ToArray());
                 }
             }
 
             dataGridView1.DataSource = dataTable;
-
-            foreach (DataGridViewColumn column in dataGridView1.Columns)
-            {
-                column.ReadOnly = column.Index != 0; // İlk sütun düzenlenebilir, diğerleri seçim yapılabilir olmalı
-            }
         }
 
         private void DataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex < 0 || e.ColumnIndex < 0)
-                return;
-
+            if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
             var cell = dataGridView1[e.ColumnIndex, e.RowIndex];
-
-            if (e.ColumnIndex == 0)
-            {
-                dataGridView1.BeginEdit(true);
-            }
-            else
-            {
-                ShowComboBoxInCell(e.RowIndex, e.ColumnIndex, cell);
-            }
+            ShowComboBoxInCell(e.RowIndex, e.ColumnIndex, cell);
         }
 
         private void ShowComboBoxInCell(int rowIndex, int columnIndex, DataGridViewCell cell)
         {
             var cellRect = dataGridView1.GetCellDisplayRectangle(columnIndex, rowIndex, true);
-
-            if (dataGridView1.Controls.OfType<ComboBox>().Any(c => c.Parent == dataGridView1 && c.Bounds.IntersectsWith(cellRect)))
-                return;
-
-            var comboBox = new ComboBox
-            {
-                DropDownStyle = ComboBoxStyle.DropDownList,
-                Size = new Size(cellRect.Width, 20),
-                Location = new Point(cellRect.Left, cellRect.Top)
-            };
-
-            comboBox.Items.AddRange(comboBoxItems.ToArray());
+            var comboBox = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Size = new Size(cellRect.Width, 20), Location = new Point(cellRect.Left, cellRect.Top) };
+            comboBox.Items.AddRange(temporaryComboBoxItems.ToArray());
             comboBox.Text = cell.Value?.ToString() ?? string.Empty;
 
             comboBox.SelectedIndexChanged += (sender, args) =>
             {
                 string selectedValue = comboBox.SelectedItem?.ToString();
-
                 if (selectedValue == "Yeni Değer Ekle...")
                 {
                     string newValue = PromptForNewValue();
-                    if (!string.IsNullOrEmpty(newValue) && !comboBoxItems.Contains(newValue))
+                    if (!string.IsNullOrEmpty(newValue) && !temporaryComboBoxItems.Contains(newValue))
                     {
-                        comboBoxItems.Insert(comboBoxItems.Count - 1, newValue);
+                        temporaryComboBoxItems.Insert(temporaryComboBoxItems.Count - 1, newValue);
                     }
                     ShowComboBoxInCell(rowIndex, columnIndex, cell);
                 }
@@ -172,7 +140,6 @@ namespace WinFormsExcelApp
                     dataGridView1.Controls.Remove(comboBox);
                 }
             };
-
             dataGridView1.Controls.Add(comboBox);
             comboBox.BringToFront();
             comboBox.Focus();
@@ -191,7 +158,6 @@ namespace WinFormsExcelApp
                 Button okButton = new Button() { Text = "Ekle", Left = 180, Width = 80, Top = 80, DialogResult = DialogResult.OK };
 
                 okButton.Click += (sender, e) => { inputForm.Close(); };
-
                 inputForm.Controls.Add(label);
                 inputForm.Controls.Add(textBox);
                 inputForm.Controls.Add(okButton);
@@ -206,12 +172,10 @@ namespace WinFormsExcelApp
             using (var workbook = new XLWorkbook())
             {
                 var worksheet = workbook.Worksheets.Add("Sayfa1");
-
                 for (int i = 0; i < dataTable.Columns.Count; i++)
                 {
                     worksheet.Cell(1, i + 1).Value = dataTable.Columns[i].ColumnName;
                 }
-
                 for (int i = 0; i < dataTable.Rows.Count; i++)
                 {
                     for (int j = 0; j < dataTable.Columns.Count; j++)
@@ -219,7 +183,6 @@ namespace WinFormsExcelApp
                         worksheet.Cell(i + 2, j + 1).Value = dataTable.Rows[i][j].ToString();
                     }
                 }
-
                 workbook.SaveAs(excelFilePath);
             }
         }
@@ -232,8 +195,32 @@ namespace WinFormsExcelApp
 
         private void ExportButton_Click(object sender, EventArgs e)
         {
-            SaveToExcel();
-            MessageBox.Show("Veriler başarıyla dışa aktarıldı.");
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "Excel Dosyası|*.xlsx",
+                Title = "Excel Dosyasını Kaydet"
+            };
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                string exportPath = saveFileDialog.FileName;
+                using (var workbook = new XLWorkbook())
+                {
+                    var worksheet = workbook.Worksheets.Add("Sayfa1");
+                    for (int i = 0; i < dataTable.Columns.Count; i++)
+                    {
+                        worksheet.Cell(1, i + 1).Value = dataTable.Columns[i].ColumnName;
+                    }
+                    for (int i = 0; i < dataTable.Rows.Count; i++)
+                    {
+                        for (int j = 0; j < dataTable.Columns.Count; j++)
+                        {
+                            worksheet.Cell(i + 2, j + 1).Value = dataTable.Rows[i][j].ToString();
+                        }
+                    }
+                    workbook.SaveAs(exportPath);
+                }
+                MessageBox.Show("Veriler başarıyla dışa aktarıldı.");
+            }
         }
     }
 }
