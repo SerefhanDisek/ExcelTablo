@@ -19,11 +19,9 @@ namespace WinFormsExcelApp
         private List<string> temporaryComboBoxItems = new List<string> { "", "e", "q", "y", "Yeni Değer Ekle..." };
 
         public MainForm()
-
         {
             InitializeComponent();
             ShowFileSelectionWindow();
-            //SelectExcelFile();
 
             if (string.IsNullOrEmpty(excelFilePath))
             {
@@ -45,33 +43,40 @@ namespace WinFormsExcelApp
                 AllowUserToAddRows = true,
                 AllowUserToDeleteRows = true,
                 SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2
+                EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2,
+                BackgroundColor = Color.WhiteSmoke, 
+                RowHeadersVisible = true, 
+                GridColor = Color.LightGray, 
+                DefaultCellStyle = new DataGridViewCellStyle { SelectionBackColor = Color.LightSkyBlue, SelectionForeColor = Color.White } 
             };
             dataGridView1.CellClick += DataGridView1_CellClick;
             this.Controls.Add(dataGridView1);
 
             AddAddColumnButton();
-
         }
 
         private void AddAddColumnButton()
         {
             Panel panel = new Panel
             {
-                Width = 100,
-                Height = this.ClientSize.Height, 
-                Dock = DockStyle.Right 
+                Width = 120,
+                Height = this.ClientSize.Height,
+                Dock = DockStyle.Right,
+                BackColor = Color.FromArgb(240, 240, 240) 
             };
             Button addColumnButton = new Button
             {
                 Text = "Sütun Ekle",
-                Width = 80,
-                Height = 30,
-                Location = new Point(10, 10)
+                Width = 100,
+                Height = 40,
+                Location = new Point(10, 10),
+                BackColor = Color.FromArgb(100, 149, 237), 
+                ForeColor = Color.White, 
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold) 
             };
 
             addColumnButton.Click += AddColumnButton_Click;
-           // addColumnButton.BringToFront();
             panel.Controls.Add(addColumnButton);
             this.Controls.Add(panel);
         }
@@ -81,7 +86,6 @@ namespace WinFormsExcelApp
             string newColumnName = PromptForNewColumnName();
             if (!string.IsNullOrEmpty(newColumnName))
             {
-                //dataGridView1.Columns.Add(newColumnName, newColumnName);
                 dataTable.Columns.Add(newColumnName, typeof(string));
             }
         }
@@ -110,7 +114,16 @@ namespace WinFormsExcelApp
 
         private void InitializeButtons()
         {
-            saveButton = new Button { Text = "Verileri Kaydet", Dock = DockStyle.Bottom, Height = 40 };
+            saveButton = new Button
+            {
+                Text = "Verileri Kaydet",
+                Dock = DockStyle.Bottom,
+                Height = 40,
+                BackColor = Color.FromArgb(0, 123, 255), 
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
             saveButton.Click += SaveButton_Click;
             this.Controls.Add(saveButton);
 
@@ -118,7 +131,11 @@ namespace WinFormsExcelApp
             {
                 Text = "Excel Çıktısı Al",
                 Dock = DockStyle.Bottom,
-                Height = 40
+                Height = 40,
+                BackColor = Color.SeaGreen,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
             };
             exportButton.Click += ExportButton_Click;
             this.Controls.Add(exportButton);
@@ -137,7 +154,11 @@ namespace WinFormsExcelApp
                     Text = "Excel Dosyası Seçin",
                     Width = 400,
                     Height = 80,
-                    Location = new Point(80, 80)
+                    Location = new Point(80, 80),
+                    BackColor = Color.FromArgb(255, 159, 64), 
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    Font = new Font("Segoe UI", 12, FontStyle.Bold)
                 };
 
                 selectFileButton.Click += (sender, e) =>
@@ -196,15 +217,31 @@ namespace WinFormsExcelApp
 
         private void DataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+            if (e.RowIndex < 0 || e.ColumnIndex < 0)
+                return;
+
             var cell = dataGridView1[e.ColumnIndex, e.RowIndex];
-            ShowComboBoxInCell(e.RowIndex, e.ColumnIndex, cell);
+
+            if (e.ColumnIndex == 0)
+            {
+                dataGridView1.BeginEdit(true);
+            }
+            else
+            {
+                ShowComboBoxInCell(e.RowIndex, e.ColumnIndex, cell);
+            }
         }
 
         private void ShowComboBoxInCell(int rowIndex, int columnIndex, DataGridViewCell cell)
         {
             var cellRect = dataGridView1.GetCellDisplayRectangle(columnIndex, rowIndex, true);
-            var comboBox = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Size = new Size(cellRect.Width, 20), Location = new Point(cellRect.Left, cellRect.Top) };
+            var comboBox = new ComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Size = new Size(cellRect.Width, 20),
+                Location = new Point(cellRect.Left, cellRect.Top),
+                ForeColor = Color.Black
+            };
             comboBox.Items.AddRange(temporaryComboBoxItems.ToArray());
             comboBox.Text = cell.Value?.ToString() ?? string.Empty;
 
@@ -276,7 +313,7 @@ namespace WinFormsExcelApp
         private void SaveButton_Click(object sender, EventArgs e)
         {
             SaveToExcel();
-            MessageBox.Show("Veriler başarıyla kaydedildi.");
+            MessageBox.Show("Excel dosyasına kaydedildi.", "Başarılı", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void ExportButton_Click(object sender, EventArgs e)
