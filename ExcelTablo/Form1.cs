@@ -50,6 +50,7 @@ namespace WinFormsExcelApp
                 DefaultCellStyle = new DataGridViewCellStyle { SelectionBackColor = Color.LightSkyBlue, SelectionForeColor = Color.White } 
             };
             dataGridView1.CellClick += DataGridView1_CellClick;
+            dataGridView1.CellMouseDown += DataGridView1_CellMouseDown;
             this.Controls.Add(dataGridView1);
 
             AddAddColumnButton();
@@ -75,9 +76,37 @@ namespace WinFormsExcelApp
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 10, FontStyle.Bold) 
             };
+            Button deleteColumnButton = new Button
+            {
+                Text = "Sütun Sil",
+                Width = 100,
+                Height = 40,
+                Location = new Point(10, 60),
+                BackColor = Color.FromArgb(237, 64, 64),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
+
+            Button deleteRowButton = new Button
+            {
+                Text = "Satır Sil",
+                Width = 100,
+                Height = 40,
+                Location = new Point(10, 110),
+                BackColor = Color.FromArgb(237, 64, 64),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
 
             addColumnButton.Click += AddColumnButton_Click;
+            deleteColumnButton.Click += DeleteColumnButton_Click;
+            deleteRowButton.Click += DeleteRowButton_Click;
+
             panel.Controls.Add(addColumnButton);
+            panel.Controls.Add(deleteColumnButton);
+            panel.Controls.Add(deleteRowButton);
             this.Controls.Add(panel);
         }
 
@@ -88,6 +117,59 @@ namespace WinFormsExcelApp
             {
                 dataTable.Columns.Add(newColumnName, typeof(string));
             }
+        }
+
+        private void DeleteColumnButton_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.SelectedCells.Count > 0)
+            {
+                int columnIndex = dataGridView1.SelectedCells[0].ColumnIndex;
+                if (dataTable.Columns.Count > columnIndex)
+                {
+                    dataTable.Columns.RemoveAt(columnIndex);
+                }
+            }
+        }
+
+        private void DeleteRowButton_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.SelectedCells.Count > 0)
+            {
+                int rowIndex = dataGridView1.SelectedCells[0].RowIndex;
+                if (dataTable.Rows.Count > rowIndex)
+                {
+                    dataTable.Rows.RemoveAt(rowIndex);
+                }
+            }
+        }
+
+        private void DataGridView1_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+                {
+                    ContextMenuStrip rowContextMenu = new ContextMenuStrip();
+                    rowContextMenu.Items.Add("Satırı Sil", null, (s, ev) => DeleteRowAt(e.RowIndex));
+                    rowContextMenu.Show(dataGridView1, dataGridView1.PointToClient(MousePosition));
+                }
+                else if (e.RowIndex == -1)
+                {
+                    ContextMenuStrip columnContextMenu = new ContextMenuStrip();
+                    columnContextMenu.Items.Add("Sütunu Sil", null, (s, ev) => DeleteColumnAt(e.ColumnIndex));
+                    columnContextMenu.Show(dataGridView1, dataGridView1.PointToClient(MousePosition));
+                }
+            }
+        }
+
+        private void DeleteRowAt(int rowIndex)
+        {
+            dataTable.Rows.RemoveAt(rowIndex);
+        }
+
+        private void DeleteColumnAt(int columnIndex)
+        {
+            dataTable.Columns.RemoveAt(columnIndex);
         }
 
         private string PromptForNewColumnName()
