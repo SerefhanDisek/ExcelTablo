@@ -19,9 +19,11 @@ namespace WinFormsExcelApp
         private List<string> temporaryComboBoxItems = new List<string> { "", "e", "q", "y", "Yeni Değer Ekle..." };
 
         public MainForm()
+
         {
             InitializeComponent();
-            SelectExcelFile();
+            ShowFileSelectionWindow();
+            //SelectExcelFile();
 
             if (string.IsNullOrEmpty(excelFilePath))
             {
@@ -54,16 +56,24 @@ namespace WinFormsExcelApp
 
         private void AddAddColumnButton()
         {
+            Panel panel = new Panel
+            {
+                Width = 100,
+                Height = this.ClientSize.Height, 
+                Dock = DockStyle.Right 
+            };
             Button addColumnButton = new Button
             {
                 Text = "Sütun Ekle",
-                Dock = DockStyle.Right,
-                Width = 60,  
-                Height = 10
+                Width = 80,
+                Height = 30,
+                Location = new Point(10, 10)
             };
 
             addColumnButton.Click += AddColumnButton_Click;
-            this.Controls.Add(addColumnButton);
+           // addColumnButton.BringToFront();
+            panel.Controls.Add(addColumnButton);
+            this.Controls.Add(panel);
         }
 
         private void AddColumnButton_Click(object sender, EventArgs e)
@@ -112,6 +122,33 @@ namespace WinFormsExcelApp
             };
             exportButton.Click += ExportButton_Click;
             this.Controls.Add(exportButton);
+        }
+
+        private void ShowFileSelectionWindow()
+        {
+            using (Form fileSelectionForm = new Form())
+            {
+                fileSelectionForm.Text = "Excel Dosyası Seçin";
+                fileSelectionForm.Width = 560;
+                fileSelectionForm.Height = 320;
+
+                Button selectFileButton = new Button
+                {
+                    Text = "Excel Dosyası Seçin",
+                    Width = 400,
+                    Height = 80,
+                    Location = new Point(80, 80)
+                };
+
+                selectFileButton.Click += (sender, e) =>
+                {
+                    SelectExcelFile();
+                    fileSelectionForm.Close();
+                };
+
+                fileSelectionForm.Controls.Add(selectFileButton);
+                fileSelectionForm.ShowDialog();
+            }
         }
 
         private void SelectExcelFile()
