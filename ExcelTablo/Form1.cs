@@ -18,6 +18,12 @@ namespace WinFormsExcelApp
         private Button exportButton;
         private List<string> temporaryComboBoxItems = new List<string> { "", "e", "q", "y", "Yeni Değer Ekle..." };
 
+        private Stack<DataTable> undoStack = new Stack<DataTable>();
+        private Stack<DataTable> redoStack = new Stack<DataTable>();
+
+        private Button undoButton;
+        private Button redoButton;
+
         public MainForm()
         {
             InitializeComponent();
@@ -32,6 +38,7 @@ namespace WinFormsExcelApp
             InitializeDataGridView();
             InitializeButtons();
             LoadExcelData();
+            InitializeUndoRedoButtons();
         }
 
         private void InitializeDataGridView()
@@ -56,6 +63,72 @@ namespace WinFormsExcelApp
             AddAddColumnButton();
         }
 
+        private void InitializeUndoRedoButtons()
+        {
+            undoButton = new Button
+            {
+                Text = "Geri Al",
+                Dock = DockStyle.Bottom,
+                Height = 40,
+                BackColor = Color.FromArgb(255, 99, 71),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
+            undoButton.Click += UndoButton_Click;
+            this.Controls.Add(undoButton);
+
+            redoButton = new Button
+            {
+                Text = "Yinele",
+                Dock = DockStyle.Bottom,
+                Height = 40,
+                BackColor = Color.FromArgb(34, 139, 34),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
+            redoButton.Click += RedoButton_Click;
+            this.Controls.Add(redoButton);
+        }
+
+        private void SaveState()
+        {
+            var currentState = dataTable.Copy();
+            undoStack.Push(currentState);
+            redoStack.Clear();  
+        }
+
+        private void UndoButton_Click(object sender, EventArgs e)
+        {
+            if (undoStack.Count > 0)
+            {
+                var lastState = undoStack.Pop();
+                redoStack.Push(dataTable.Copy());
+                dataTable = lastState;
+                dataGridView1.DataSource = dataTable;
+            }
+            else
+            {
+                MessageBox.Show("Geri alınacak işlem yok.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void RedoButton_Click(object sender, EventArgs e)
+        {
+            if (redoStack.Count > 0)
+            {
+                var redoState = redoStack.Pop();
+                undoStack.Push(dataTable.Copy());
+                dataTable = redoState;
+                dataGridView1.DataSource = dataTable;
+            }
+            else
+            {
+                MessageBox.Show("Yineleyecek işlem yok.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
         private void AddAddColumnButton()
         {
             Panel panel = new Panel
@@ -76,7 +149,7 @@ namespace WinFormsExcelApp
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 10, FontStyle.Bold) 
             };
-            Button deleteColumnButton = new Button
+            /*Button deleteColumnButton = new Button
             {
                 Text = "Sütun Sil",
                 Width = 100,
@@ -98,16 +171,17 @@ namespace WinFormsExcelApp
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 10, FontStyle.Bold)
-            };
+            };*/
 
             addColumnButton.Click += AddColumnButton_Click;
-            deleteColumnButton.Click += DeleteColumnButton_Click;
-            deleteRowButton.Click += DeleteRowButton_Click;
+            //deleteColumnButton.Click += DeleteColumnButton_Click;
+            //deleteRowButton.Click += DeleteRowButton_Click;
 
             panel.Controls.Add(addColumnButton);
-            panel.Controls.Add(deleteColumnButton);
-            panel.Controls.Add(deleteRowButton);
+            //panel.Controls.Add(deleteColumnButton);
+            //panel.Controls.Add(deleteRowButton);
             this.Controls.Add(panel);
+
         }
 
         private void AddColumnButton_Click(object sender, EventArgs e)
@@ -117,6 +191,7 @@ namespace WinFormsExcelApp
             {
                 dataTable.Columns.Add(newColumnName, typeof(string));
             }
+            SaveState();
         }
 
         private void DeleteColumnButton_Click(object sender, EventArgs e)
@@ -129,6 +204,7 @@ namespace WinFormsExcelApp
                     dataTable.Columns.RemoveAt(columnIndex);
                 }
             }
+            SaveState();
         }
 
         private void DeleteRowButton_Click(object sender, EventArgs e)
@@ -293,7 +369,7 @@ namespace WinFormsExcelApp
                     dataTable.Rows.Add(row.Cells().Select(c => c.GetValue<string>()).ToArray());
                 }
             }
-
+            SaveState();
             dataGridView1.DataSource = dataTable;
         }
 
