@@ -36,9 +36,8 @@ namespace WinFormsExcelApp
             }
 
             InitializeDataGridView();
-            InitializeButtons();
+            //InitializeButtons();
             LoadExcelData();
-            InitializeUndoRedoButtons();
         }
 
         private void InitializeDataGridView()
@@ -61,35 +60,6 @@ namespace WinFormsExcelApp
             this.Controls.Add(dataGridView1);
 
             AddAddColumnButton();
-        }
-
-        private void InitializeUndoRedoButtons()
-        {
-            undoButton = new Button
-            {
-                Text = "Geri Al",
-                Dock = DockStyle.Bottom,
-                Height = 40,
-                BackColor = Color.FromArgb(255, 99, 71),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
-            };
-            undoButton.Click += UndoButton_Click;
-            this.Controls.Add(undoButton);
-
-            redoButton = new Button
-            {
-                Text = "Yinele",
-                Dock = DockStyle.Bottom,
-                Height = 40,
-                BackColor = Color.FromArgb(34, 139, 34),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
-            };
-            redoButton.Click += RedoButton_Click;
-            this.Controls.Add(redoButton);
         }
 
         private void SaveState()
@@ -136,7 +106,7 @@ namespace WinFormsExcelApp
                 Width = 120,
                 Height = this.ClientSize.Height,
                 Dock = DockStyle.Right,
-                BackColor = Color.FromArgb(240, 240, 240) 
+                BackColor = Color.FromArgb(240, 240, 240)
             };
             Button addColumnButton = new Button
             {
@@ -144,10 +114,10 @@ namespace WinFormsExcelApp
                 Width = 100,
                 Height = 40,
                 Location = new Point(10, 10),
-                BackColor = Color.FromArgb(100, 149, 237), 
-                ForeColor = Color.White, 
+                BackColor = Color.FromArgb(100, 149, 237),
+                ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold) 
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
             };
             /*Button deleteColumnButton = new Button
             {
@@ -180,6 +150,66 @@ namespace WinFormsExcelApp
             panel.Controls.Add(addColumnButton);
             //panel.Controls.Add(deleteColumnButton);
             //panel.Controls.Add(deleteRowButton);
+            this.Controls.Add(panel);
+
+            Button saveButton = new Button
+            {
+                Text = "Verileri Kaydet",
+                Dock = DockStyle.Bottom,
+                Width = 90,
+                Height = 40,
+                BackColor = Color.FromArgb(0, 123, 255),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
+            saveButton.Click += SaveButton_Click;
+            panel.Controls.Add(saveButton);
+            this.Controls.Add(panel);
+
+            Button exportButton = new Button
+            {
+                Text = "Excel Çıktısı Al",
+                Dock = DockStyle.Bottom,
+                Width = 80,
+                Height = 40,
+                BackColor = Color.SeaGreen,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
+            exportButton.Click += ExportButton_Click;
+            panel.Controls.Add(exportButton);
+            this.Controls.Add(panel);
+
+            Button undoButton = new Button
+            {
+                Text = "Geri Al",
+                Dock = DockStyle.Bottom,
+                Width = 70,
+                Height = 40,
+                BackColor = Color.FromArgb(255, 99, 71),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
+            undoButton.Click += UndoButton_Click;
+            panel.Controls.Add(undoButton);
+            this.Controls.Add(panel);
+
+            Button redoButton = new Button
+            {
+                Text = "Yinele",
+                Dock = DockStyle.Bottom,
+                Height = 40,
+                Width = 60,
+                BackColor = Color.FromArgb(34, 139, 34),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
+            redoButton.Click += RedoButton_Click;
+            panel.Controls.Add(redoButton);
             this.Controls.Add(panel);
 
         }
@@ -268,35 +298,6 @@ namespace WinFormsExcelApp
 
                 return inputForm.ShowDialog() == DialogResult.OK ? textBox.Text.Trim() : null;
             }
-        }
-
-        private void InitializeButtons()
-        {
-            saveButton = new Button
-            {
-                Text = "Verileri Kaydet",
-                Dock = DockStyle.Bottom,
-                Height = 40,
-                BackColor = Color.FromArgb(0, 123, 255), 
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
-            };
-            saveButton.Click += SaveButton_Click;
-            this.Controls.Add(saveButton);
-
-            exportButton = new Button
-            {
-                Text = "Excel Çıktısı Al",
-                Dock = DockStyle.Bottom,
-                Height = 40,
-                BackColor = Color.SeaGreen,
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
-            };
-            exportButton.Click += ExportButton_Click;
-            this.Controls.Add(exportButton);
         }
 
         private void ShowFileSelectionWindow()
